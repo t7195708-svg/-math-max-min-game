@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>เกมตะลุยค่าสูงสุด–ค่าต่ำสุด</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,"Noto Sans Thai",sans-serif;background:linear-gradient(135deg,#fff3e0,#e3f2fd);color:#263238}
+.wrap{max-width:760px;margin:auto;padding:14px}.card{background:#fff;border:3px solid #263238;border-radius:22px;padding:16px;box-shadow:0 7px 0 #263238}
+h1{text-align:center;margin:5px 0 4px;font-size:27px}.sub{text-align:center;color:#607d8b;margin:0 0 15px}
+.tabs{display:flex;gap:8px;margin-bottom:15px}.tab{flex:1;border:2px solid #263238;border-radius:12px;padding:10px;background:#ffe082;font-weight:bold}.tab.active{background:#ff9800;color:#fff}
+.section{display:none}.section.active{display:block}
+canvas{width:100%;height:300px;border:2px solid #263238;border-radius:14px;background:#fafafa}
+.panel{background:#f5f5f5;border:2px solid #cfd8dc;border-radius:13px;padding:12px;margin-top:10px}
+input[type=range]{width:100%;accent-color:#ff7043}.big{font-size:18px;font-weight:bold}.badge{display:inline-block;padding:5px 9px;border-radius:10px;background:#e3f2fd;margin-top:5px}
+.btn,.option{border:2px solid #263238;border-radius:10px;padding:10px;font-weight:bold;cursor:pointer}.btn{background:#43a047;color:white;width:100%;margin-top:10px}.option{display:block;width:100%;margin:7px 0;text-align:left;background:white}.option:disabled{cursor:default}
+.correct{background:#c8e6c9!important}.wrong{background:#ffcdd2!important}
+.explain{padding:11px;border-radius:10px;background:#e8f5e9;border:2px solid #66bb6a;margin-top:10px}
+.score{display:flex;justify-content:space-between;font-weight:bold;margin-bottom:10px}
+.small{font-size:13px;color:#546e7a}.result{text-align:center;padding:15px;background:#fff8e1;border-radius:14px;border:2px solid #ffb300}
+</style>
+</head>
+<body>
+<div class="wrap"><div class="card">
+<h1>🧠 เกมตะลุยค่าสูงสุด–ค่าต่ำสุด 📈</h1>
+<p class="sub">เรียนรู้ฟังก์ชันเพิ่ม–ลด และจุดสูงสุด–ต่ำสุดแบบ Interactive</p>
+
+<div class="tabs">
+<button class="tab active" onclick="tab('graph',this)">📊 สำรวจกราฟ</button>
+<button class="tab" onclick="tab('quiz',this)">🎯 เกมตอบคำถาม</button>
+</div>
+
+<section id="graph" class="section active">
+<canvas id="c"></canvas>
+<div class="panel">
+<div class="big">ลากตัวเลื่อนเพื่อสำรวจกราฟ</div>
+<input id="slider" type="range" min="-3" max="3" step=".1" value="0">
+<div id="info"></div>
+</div>
+<div class="panel small">
+<b>จำง่าย ๆ:</b> f′(x) &gt; 0 → ฟังก์ชันเพิ่ม ↗️ &nbsp; | &nbsp;
+f′(x) &lt; 0 → ฟังก์ชันลด ↘️<br>
+อนุพันธ์เปลี่ยนจาก + → − = จุดสูงสุดสัมพัทธ์ และ − → + = จุดต่ำสุดสัมพัทธ์
+</div>
+</section>
+
+<section id="quiz" class="section">
+<div class="score"><span id="qn">ข้อ 1 / 15</span><span id="score">คะแนน 0</span></div>
+<div id="question" class="big"></div><div id="options"></div>
+<div id="explain" class="explain" style="display:none"></div>
+<button id="next" class="btn" style="display:none" onclick="nextQ()">ข้อต่อไป ➜</button>
+</section>
+</div></div>
+
+<script>
+const canvas=document.getElementById("c"),ctx=canvas.getContext("2d"),slider=document.getElementById("slider");
+function resize(){canvas.width=canvas.clientWidth*devicePixelRatio;canvas.height=300*devicePixelRatio;ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);draw()}
+window.addEventListener("resize",resize);
+function f(x){return x*x-2*x-3} function df(x){return 2*x-2}
+function draw(){
+ let w=canvas.clientWidth,h=300,s=38,cx=w/2,cy=150;
+ ctx.clearRect(0,0,w,h);ctx.strokeStyle="#90a4ae";ctx.lineWidth=1;
+ for(let x=-5;x<=5;x++){let px=cx+x*s;ctx.beginPath();ctx.moveTo(px,0);ctx.lineTo(px,h);ctx.stroke()}
+ for(let y=-3;y<=6;y++){let py=cy-y*s;ctx.beginPath();ctx.moveTo(0,py);ctx.lineTo(w,py);ctx.stroke()}
+ ctx.strokeStyle="#263238";ctx.lineWidth=2;
+ ctx.beginPath();ctx.moveTo(0,cy);ctx.lineTo(w,cy);ctx.stroke();
+ ctx.beginPath();ctx.moveTo(cx,0);ctx.lineTo(cx,h);ctx.stroke();
+ ctx.beginPath();ctx.strokeStyle="#1976d2";ctx.lineWidth=3;
+ for(let px=0;px<w;px++){let x=(px-cx)/s,y=f(x),py=cy-y*s;if(px===0)ctx.moveTo(px,py);else ctx.lineTo(px,py)}ctx.stroke();
+ let x=+slider.value,y=f(x);
+ ctx.beginPath();ctx.arc(cx+x*s,cy-y*s,8,0,Math.PI*2);ctx.fillStyle="#ef5350";ctx.fill();
+ let slope=df(x),state=slope>0.05?"ฟังก์ชันเพิ่ม ↗️":slope<-.05?"ฟังก์ชันลด ↘️":"จุดวิกฤต";
+ let extra=Math.abs(x-1)<.06?" ⭐ จุดต่ำสุดสัมพัทธ์":state;
+ document.getElementById("info").innerHTML=`<b>x = ${x.toFixed(1)}</b> &nbsp; | &nbsp; <b>f(x) = ${y.toFixed(2)}</b><br><span class="badge">f′(x) = ${slope.toFixed(2)} → ${state}${extra}</span>`;
+}
+slider.oninput=draw;resize();
+
+function tab(id,btn){document.querySelectorAll(".section").forEach(x=>x.classList.remove("active"));document.getElementById(id).classList.add("active");document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));btn.classList.add("active");}
+
+const qs=[
+["ถ้า f′(x)>0 บนช่วงหนึ่ง ฟังก์ชันเป็นอย่างไร?",["เพิ่ม","ลด","คงที่","ไม่มีข้อมูล"],0,"อนุพันธ์เป็นบวก หมายถึงกราฟกำลังเพิ่ม"],
+["ถ้า f′(x)<0 บนช่วงหนึ่ง ฟังก์ชันเป็นอย่างไร?",["เพิ่ม","ลด","คงที่","เป็นศูนย์"],1,"อนุพันธ์เป็นลบ หมายถึงกราฟกำลังลด"],
+["จุดวิกฤตมักหาได้จากเงื่อนไขใด?",["f(x)=0","f′(x)=0 หรือหาไม่ได้","f′(x)>0","f′′(x)=1"],1,"จุดวิกฤตคือจุดที่อนุพันธ์เป็นศูนย์หรืออนุพันธ์หาไม่ได้"],
+["ถ้าอนุพันธ์เปลี่ยนจาก + เป็น − จะได้จุดใด?",["สูงสุดสัมพัทธ์","ต่ำสุดสัมพัทธ์","จุดตัดแกน","ไม่มีจุด"],0,"เพิ่มแล้วลด จึงเป็นยอดเขา หรือจุดสูงสุดสัมพัทธ์"],
+["ถ้าอนุพันธ์เปลี่ยนจาก − เป็น + จะได้จุดใด?",["สูงสุดสัมพัทธ์","ต่ำสุดสัมพัทธ์","จุดตัดแกน","ไม่มีจุด"],1,"ลดแล้วเพิ่ม จึงเป็นก้นหุบ หรือจุดต่ำสุดสัมพัทธ์"],
+["f(x)=x²-4x+5 มีจุดต่ำสุดที่ x เท่าใด?",["-2","0","2","4"],2,"f′(x)=2x−4=0 จึงได้ x=2"],
+["ค่าสูงสุดของ f(x)=−x²+6x−1 คือเท่าใด?",["8","6","3","1"],0,"จุดยอดอยู่ที่ x=3 และ f(3)=8"],
+["f(x)=x²+2x มีจุดวิกฤตกี่จุด?",["0","1","2","3"],1,"f′(x)=2x+2=0 ได้ x=−1 เพียงจุดเดียว"],
+["f(x)=5 เป็นฟังก์ชันแบบใด?",["เพิ่ม","ลด","คงที่","ไม่มีค่า"],2,"ค่าคงตัวมีอนุพันธ์เท่ากับ 0"],
+["f(x)=(x−3)² มีค่าต่ำสุดเท่าใด?",["0","3","6","9"],0,"กำลังสองมีค่าต่ำสุดที่ x=3 และมีค่า 0"],
+["ถ้า f′(c)=0 และ f′′(c)>0 มักสรุปได้ว่าเป็นอะไร?",["สูงสุดสัมพัทธ์","ต่ำสุดสัมพัทธ์","ไม่มีจุด","ฟังก์ชันลด"],1,"อนุพันธ์อันดับสองเป็นบวก → กราฟโค้งหงาย → ต่ำสุด"],
+["ถ้า f′(c)=0 และ f′′(c)<0 มักสรุปได้ว่าเป็นอะไร?",["สูงสุดสัมพัทธ์","ต่ำสุดสัมพัทธ์","ไม่มีจุด","ฟังก์ชันเพิ่ม"],0,"อนุพันธ์อันดับสองเป็นลบ → กราฟโค้งคว่ำ → สูงสุด"],
+["เส้นสัมผัสเมื่อ f′(c)=0 มีลักษณะอย่างไร?",["ขนานแกน X","ขนานแกน Y","เอียง 45°","ตั้งฉากกับแกน X"],0,"ความชันเป็น 0 จึงขนานกับแกน X"],
+["f(x)=x³−3x เป็นฟังก์ชันลดในช่วงใด?",["(−∞,−1)","(−1,1)","(1,∞)","ทุกช่วง"],1,"f′(x)=3x²−3<0 เมื่อ −1<x<1"],
+["ถ้าต้องหาค่าสูงสุดสัมบูรณ์บนช่วงปิด ควรตรวจอะไร?",["จุดวิกฤตอย่างเดียว","ปลายช่วงอย่างเดียว","จุดวิกฤตและปลายช่วง","เฉพาะจุด x=0"],2,"ต้องเปรียบเทียบค่าที่จุดวิกฤตกับค่าที่ปลายช่วง"]
+];
+let qi=0,score=0,answered=false;
+function loadQ(){
+ answered=false;let q=qs[qi];document.getElementById("qn").textContent=`ข้อ ${qi+1} / ${qs.length}`;document.getElementById("question").textContent=q[0];
+ document.getElementById("explain").style.display="none";document.getElementById("next").style.display="none";
+ document.getElementById("options").innerHTML=q[1].map((o,i)=>`<button class="option" onclick="answer(${i})">${o}</button>`).join("");
+}
+function answer(i){if(answered)return;answered=true;let q=qs[qi],bs=document.querySelectorAll(".option");bs.forEach(b=>b.disabled=true);
+ if(i===q[2]){score+=10;bs[i].classList.add("correct")}else{bs[i].classList.add("wrong");bs[q[2]].classList.add("correct")}
+ document.getElementById("score").textContent=`คะแนน ${score}`;document.getElementById("explain").innerHTML="<b>💡 อธิบาย:</b> "+q[3];document.getElementById("explain").style.display="block";document.getElementById("next").style.display="block";
+}
+function nextQ(){qi++;if(qi<qs.length)loadQ();else{document.getElementById("question").innerHTML=`🎉 จบเกม!<br><span style="font-size:22px">ได้ ${score} / ${qs.length*10} คะแนน</span>`;document.getElementById("options").innerHTML=`<div class="result">${score>=120?"🏆 ยอดเยี่ยม!":"🌟 เก่งมาก! ลองเล่นอีกครั้งเพื่อทำคะแนนให้สูงขึ้น"}</div>`;document.getElementById("explain").style.display="none";document.getElementById("next").style.display="none";}}
+loadQ();
+</script>
+</body>
+</html>
